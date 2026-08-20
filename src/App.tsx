@@ -252,13 +252,6 @@ const handleClick = (exerciseName: string) => {
   console.log(`Click on ${exerciseName}`)
 }
 
-const handleSubmit = async (event: React.FormEvent<HTMLElement>) => {
-  event.preventDefault()
-
-  await addExercise(event)
-  addSet(event)
-}
-
   return (
     <div style={{ 
       maxWidth: '800px',
