@@ -2,7 +2,7 @@
 
 import express from 'express'
 import cors from 'cors'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../node_modules/.prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import 'dotenv/config'
 
@@ -85,6 +85,48 @@ app.get('/sets', async (req, res) => {
             take: 50,
         })
         res.json(sets)
+    } catch (error) {
+        console.log("GET error:", error)
+        res.status(500).json({error: 'Failed to get all sets'})
+    }
+})
+
+// add to Epley DB
+app.post('/epley', async (req, res) => {
+    try {
+        const { exerciseId, oneRM, asOf } = req.body
+
+        const exercise = await prisma.exercise.findUnique({
+            where: {id: exerciseId }
+        })
+
+        if (!exercise) {
+            return res.status(404).json({error: `Failed to find exercise`})
+        }
+
+        const epley = await prisma.epley.create({
+            data: { 
+                exerciseId, 
+                oneRM: parseFloat(oneRM), 
+                asOf: asOf ? new Date(asOf) : new Date()
+            },
+        })
+
+        res.json(epley)
+    } catch (error) {
+        console.log(`Post error: `, error)
+        res.status(500).json({error: `Failed to add epley`})
+    }
+})
+
+app.get('/epley', async (req, res) => {
+    try {
+        const epleys = await prisma.epley.findMany({
+            orderBy: { asOf: 'desc' },
+            take: 50,
+        })
+        
+        res.json(epleys)
     } catch (error) {
         console.log("GET error:", error)
         res.status(500).json({error: 'Failed to get all sets'})
