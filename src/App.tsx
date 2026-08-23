@@ -174,7 +174,11 @@ const addSet = async (e: React.FormEvent) => {
       const oneRM = calcOneRepMax(newSet.exerciseId, newSet)
 
       if (oneRM !== null){
-        await addEpley(newSet.exerciseId, oneRM)
+        const newEpley = await addEpley(newSet.exerciseId, oneRM)
+
+        if (newEpley) {
+          setEpleys(prevEpleys => [newEpley, ...prevEpleys])
+        }
       }
     }
   } catch (error){
@@ -427,6 +431,7 @@ const handleClick = (exerciseName: string) => {
             Your Exercises ({exercises.length})
           </h2>
 
+          {/* Exersices List */}
           {exercises.length === 0 ? (
             <div style={{ 
               padding: '2rem', 
@@ -471,6 +476,7 @@ const handleClick = (exerciseName: string) => {
           )}
         </div>
       
+        {/* Sets List*/}
         <div> 
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
             Your Sets ({sets.length})
@@ -555,10 +561,11 @@ const handleClick = (exerciseName: string) => {
                   </span>
                   <span style={{ fontSize: '0.85rem', color: '#555', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {sets.map((sets, idx) => (
+                      sets.exerciseId === epleys.exerciseId && (
                       <span key={sets.id || idx}>
                         Set: {sets.reps}x{sets.weight}
                       </span>
-                    ))}
+                    )))}
                   </span>  
                   <span style={{ fontSize: '0.85rem', color: "#888" }}>
                     {new Date(epleys.asOf).toLocaleDateString('en-US', {
