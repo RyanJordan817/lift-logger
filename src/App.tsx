@@ -86,7 +86,7 @@ const addExercise = async (e: React.FormEvent) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        name: trimmedName,
+        name: trimmedName.toLowerCase(),
         userId: 'test-user'
       }),
     })

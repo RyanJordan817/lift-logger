@@ -2,7 +2,7 @@
 
 import express from 'express'
 import cors from 'cors'
-import { PrismaClient } from '../node_modules/.prisma/client'
+import { PrismaClient, Prisma } from '../generated/prisma/client.js'
 import { PrismaPg } from '@prisma/adapter-pg'
 import 'dotenv/config'
 
@@ -40,6 +40,12 @@ app.post('/exercises', async (req, res) =>{
     } catch (error) {
         console.log('Post error:', error)
         res.status(500).json({ error: 'Failed to create exercise' })
+        if (error instanceof Prisma.PrismaClientKnownRequestError){
+            if (error.code === 'P2002') {
+                console.log('Unique constraint error', error)
+                res.status(404).json({ error: 'An exercise for this name already exists for user'})
+            }
+        }
     }
 })
 
