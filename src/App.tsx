@@ -21,7 +21,7 @@ interface Sets {
 
 interface Epley {
   id: string
-  execiseId: string
+  exerciseId: string
   oneRM: number
   asOf: string
 }
@@ -45,6 +45,7 @@ function App() {
   useEffect(() => {
     fetchExercises()
     fetchSets()
+    fetchEpley()
   }, [])
 
   // Featching all exercises in db
@@ -211,12 +212,25 @@ const addEpley = async (exerciseId: string, oneRM: number) => {
   } 
 }
 
+const fetchEpley = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/epley`)
+    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
+    const data = await res.json()
+    setEpleys(data)
+    setError('')
+  } catch (error) {
+    console.log('Failed to get sets:', error)
+    setError(error instanceof Error ? error.message : 'Failed to get sets')
+  }
+}
+
 const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
 
   if (lastestSet) {
     const { weight, reps } = lastestSet
     if (weight > 0 && reps > 0){
-      const oneRM = weight * ((1 + reps) / 30)
+      const oneRM = weight * (1 + reps / 30)
       console.log(`1RM for lastest set: ${oneRM.toFixed(1)}`)
       return oneRM
     }
@@ -492,6 +506,62 @@ const handleClick = (exerciseName: string) => {
                   </span>
                   <span style={{ fontSize: '0.85rem', color: "#888" }}>
                     {new Date(sets.loggedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/*Epley list*/}
+        <div> 
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
+            1 Rep Max ({epleys.length})
+          </h2>
+
+          {epleys.length === 0 ? (
+            <div style={{ 
+              padding: '2rem', 
+              backgroundColor: '#f9f9f9',
+              borderRadius: '6px',
+              textAlign: 'center',
+              color: '#999'
+            }}>
+              1RM not logged yet. Add this will populate with sets!
+            </div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {epleys.map((epleys, idx) => (
+                <li key={epleys.id || idx} 
+                  style={{
+                    padding: '1rem',
+                    marginBottom: '0.5rem',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem'
+                }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}> 
+                    {getExerciseName(epleys.exerciseId)} - 1RM: {epleys.oneRM}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: '#555', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {sets.map((sets, idx) => (
+                      <span key={sets.id || idx}>
+                        Set: {sets.reps}x{sets.weight}
+                      </span>
+                    ))}
+                  </span>  
+                  <span style={{ fontSize: '0.85rem', color: "#888" }}>
+                    {new Date(epleys.asOf).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
