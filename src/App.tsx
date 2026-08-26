@@ -171,7 +171,12 @@ const addSet = async (e: React.FormEvent) => {
     setTimeout(() => setSuccessMsg(''), 3000)
 
     if (newSet) {
-      const oneRM = calcOneRepMax(newSet.exerciseId, newSet)
+      //const oneRM = calcOneRepMax(newSet.exerciseId, newSet)
+      const result = await fetch(`${API_BASE}/sets/getMax?exerciseId=${encodeURIComponent(selectedExerciseId)}`)
+
+      if (!result.ok) throw new Error(`Failed to fetch: ${result.status}`)
+      
+      const { oneRM } = await result.json()
 
       if (oneRM !== null){
         const newEpley = await addEpley(newSet.exerciseId, oneRM)
@@ -229,7 +234,7 @@ const fetchEpley = async () => {
   }
 }
 
-const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
+/*const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
 
   if (lastestSet) {
     const { weight, reps } = lastestSet
@@ -259,7 +264,7 @@ const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
 
   return null
   
-}
+}*/
 
 const getExerciseName = (exerciseId: string) => {
   const exercise = exercises.find(e => e.id === exerciseId)

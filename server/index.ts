@@ -139,6 +139,44 @@ app.get('/epley', async (req, res) => {
     }
 })
 
+app.get('/sets/getMax', async (req, res) => {
+    try {
+        const exerciseId = String(req.query.exerciseId ?? '')
+
+        if (!exerciseId) {
+            return res.status(400).json({error: 'exerciseId not specified for Fetch'})
+        }
+
+        const sets = await prisma.set.findMany({
+            where: { exerciseId },
+            select: {
+                id: true,
+                exerciseId: true,
+                weight: true,
+                reps: true,
+                rpe: true,
+                loggedAt: true,
+            },
+        })
+
+        const bestSet = sets.reduce<typeof sets[number] | null>((best, current) => {
+            if (current.weight <= 0 || current.reps <= 0) return best
+
+            const currentOneRM = current.weight * (1 + current.reps / 30)
+            const bestOneRM = best ? best.weight * (1 + best.reps / 30) : 0
+
+            return currentOneRM > bestOneRM ? current : best
+        }, null)
+
+        const oneRM = bestSet ? bestSet.weight * (1 + bestSet.reps / 30) : null
+
+        res.json({ set: bestSet, oneRM})
+    } catch (error) {
+        console.log("GET error:", error)
+        res.status(500).json({error: 'Failed to get max set'})
+    }
+})
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`)
 })
