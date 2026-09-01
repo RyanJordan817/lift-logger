@@ -2,7 +2,7 @@
 
 import express from 'express'
 import cors from 'cors'
-import { PrismaClient, Prisma } from '../generated/prisma/client.js'
+import { PrismaClient, Prisma } from  '@prisma/client'              //'../generated/prisma/client.js'
 import { PrismaPg } from '@prisma/adapter-pg'
 import 'dotenv/config'
 
@@ -174,6 +174,16 @@ app.get('/sets/getMax', async (req, res) => {
     } catch (error) {
         console.log("GET error:", error)
         res.status(500).json({error: 'Failed to get max set'})
+    }
+})
+
+app.delete('/sets/:id', async (req, res) => {
+    try{
+        await prisma.set.delete({ where: { id: req.params.id } })
+        res.json({ success: true})
+    } catch(error) {
+        console.log('Delete error:', error)
+        res.status(500).json({ error: 'Failed to delete' })
     }
 })
 

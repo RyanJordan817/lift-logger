@@ -234,6 +234,24 @@ const fetchEpley = async () => {
   }
 }
 
+const deleteSet = async (setId: string) => {
+  if (!window.confirm('Delete this set?')) return
+  try {
+    const res = await fetch(`${API_BASE}/sets/${setId}`, {
+      method: 'DELETE',
+    })
+
+    if (!res.ok) throw new Error('Failed to delete set.')
+
+    setSets(sets.filter(s => s.id !== setId))
+    setSuccessMsg('Set deleted successfully!')
+    setTimeout(() => setSuccessMsg(''), 3000)
+  } catch (error) {
+    console.log('Delete error:', error)
+    setError(error instanceof Error ? error.message : 'Failed to delete set')
+  }
+}
+
 /*const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
 
   if (lastestSet) {
@@ -269,10 +287,6 @@ const fetchEpley = async () => {
 const getExerciseName = (exerciseId: string) => {
   const exercise = exercises.find(e => e.id === exerciseId)
   return exercise ? exercise.name : 'Unknown'
-}
-
-const handleClick = (exerciseName: string) => {
-  console.log(`Click on ${exerciseName}`)
 }
 
   return (
@@ -451,7 +465,6 @@ const handleClick = (exerciseName: string) => {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {exercises.map((exercises, idx) => (
                 <li key={exercises.id || idx} 
-                  onClick={() => handleClick(getExerciseName(exercises.id))}
                   style={{
                     padding: '1rem',
                     marginBottom: '0.5rem',
@@ -512,8 +525,30 @@ const handleClick = (exerciseName: string) => {
                     flexWrap: 'wrap',
                     gap: '0.5rem'
                 }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}> 
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold', fontSize: '1.05rem' }}> 
                     {getExerciseName(sets.exerciseId)} - {sets.reps}x{sets.weight} - {sets.rpe}/10
+                    <i 
+                      className="mdi-alpha-x" 
+                      onClick = {() => deleteSet(sets.id)}
+                      style = {{
+                        cursor: 'pointer',
+                        fontSize: '1.3rem',
+                        color: '#d32f2f',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffebee'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation() //Prevent event bubbling
+                      }
+                      }
+                    />
                   </span>
                   <span style={{ fontSize: '0.85rem', color: "#888" }}>
                     {new Date(sets.loggedAt).toLocaleDateString('en-US', {
