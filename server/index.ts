@@ -179,11 +179,39 @@ app.get('/sets/getMax', async (req, res) => {
 
 app.delete('/sets/:id', async (req, res) => {
     try{
-        await prisma.set.delete({ where: { id: req.params.id } })
-        res.json({ success: true})
+        const result = await prisma.set.deleteMany({
+            where: { id: req.params.id },
+        })
+
+        res.json({ success: true, deleted: result.count > 0 })
     } catch(error) {
         console.log('Delete error:', error)
-        res.status(500).json({ error: 'Failed to delete' })
+        res.status(500).json({ error: 'Failed to delete set' })
+    }
+})
+
+app.delete('/exercises/:id', async (req, res) => {
+    try {
+        await prisma.exercise.delete({ 
+            where: { id: req.params.id } 
+        })
+        res.json({ success: true})
+    } catch (error) {
+        console.log('Delete error:', error)
+        res.status(500).json({ error: 'Failed to delete exercise'})
+    }
+})
+
+app.delete('/epley/:id', async (req, res) => {
+    try {
+        await prisma.epley.delete({ 
+            where: { id: req.params.id } 
+        })
+
+        res.json({ success: true })
+    } catch (error) {
+        console.log('Delete error:', error)
+        res.status(500).json({ error: 'Failed to delete epley records' })
     }
 })
 

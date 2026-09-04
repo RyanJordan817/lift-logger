@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { sidebarNavItems } from './navConfig'
+import { Trash } from 'lucide-react'
 import './App.css'
 
 // Can't use PrismaClient directly in the browser
@@ -246,7 +247,7 @@ const deleteSet = async (setId: string) => {
 
     if (!res.ok) throw new Error('Failed to delete set.')
 
-    setSets(sets.filter(s => s.id !== setId))
+    setSets(currentSets => currentSets.filter(set => set.id !== setId))
     setSuccessMsg('Set deleted successfully!')
     setTimeout(() => setSuccessMsg(''), 3000)
   } catch (error) {
@@ -254,6 +255,43 @@ const deleteSet = async (setId: string) => {
     setError(error instanceof Error ? error.message : 'Failed to delete set')
   }
 }
+
+const deleteExercise = async (exerciseId: string) => {
+  if (!window.confirm('Delete this exercise?')) return
+  try {
+    const res = await fetch(`${API_BASE}/exercises/${exerciseId}`, {
+      method: 'DELETE',
+    })
+
+    if (!res.ok) throw new Error('Failed to delete exercise.')
+
+    setExercises(exercises.filter(e => e.id !== exerciseId))
+    setSuccessMsg('Exercise deleted successfully!')
+    setTimeout(() => setSuccessMsg(''), 3000)
+  } catch (error) {
+    console.log('Delete error:', error)
+    setError(error instanceof Error ? error.message : 'Failed to delete exercise')
+  }
+}
+
+const deleteEpley = async (epleyId: string) => {
+  if (!window.confirm('Delete this epley record?')) return
+  try {
+    const res = await fetch(`${API_BASE}/epley/${epleyId}`, {
+      method: 'DELETE',
+    })
+
+    if (!res.ok) throw new Error('Failed to delete epley record.')
+
+    setEpleys(epleys.filter(e => e.id !== epleyId))
+    setSuccessMsg('Epley record deleted successfully!')
+    setTimeout(() => setSuccessMsg(''), 3000)
+  } catch (error) {
+    console.log('Delete error:', error)
+    setError(error instanceof Error ? error.message : 'Failed to delete epley record')
+  }
+}
+
 
 /*const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
 
@@ -513,6 +551,30 @@ const getExerciseName = (exerciseId: string) => {
                 }}>
                   <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}> 
                     {exercises.name}
+
+                    <i 
+                      onClick = {() => deleteExercise(exercises.id)}
+                      style = {{
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                        color: '#d32f2f',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffebee'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation() //Prevent event bubbling
+                      }
+                      }
+                    >
+                      <Trash />
+                    </i>
                   </span>
                   <span style={{ fontSize: '0.85rem', color: "#888" }}>
                     {new Date(exercises.createdAt).toLocaleDateString('en-US', {
@@ -563,11 +625,10 @@ const getExerciseName = (exerciseId: string) => {
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold', fontSize: '1.05rem' }}> 
                     {getExerciseName(sets.exerciseId)} - {sets.reps}x{sets.weight} - {sets.rpe}/10
                     <i 
-                      className="mdi-alpha-x" 
                       onClick = {() => deleteSet(sets.id)}
                       style = {{
                         cursor: 'pointer',
-                        fontSize: '1.3rem',
+                        fontSize: '0.75rem',
                         color: '#d32f2f',
                         padding: '0.25rem 0.5rem',
                         borderRadius: '4px',
@@ -583,7 +644,9 @@ const getExerciseName = (exerciseId: string) => {
                         e.stopPropagation() //Prevent event bubbling
                       }
                       }
-                    />
+                    >
+                      <Trash />
+                    </i>
                   </span>
                   <span style={{ fontSize: '0.85rem', color: "#888" }}>
                     {new Date(sets.loggedAt).toLocaleDateString('en-US', {
@@ -633,6 +696,29 @@ const getExerciseName = (exerciseId: string) => {
                 }}>
                   <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}> 
                     {getExerciseName(epleys.exerciseId)} - 1RM: {epleys.oneRM}
+                     <i 
+                      onClick = {() => deleteEpley(epleys.id)}
+                      style = {{
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                        color: '#d32f2f',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffebee'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation() //Prevent event bubbling
+                      }
+                      }
+                    >
+                      <Trash />
+                    </i>
                   </span>
                   <span style={{ fontSize: '0.85rem', color: '#555', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     {sets.map((sets, idx) => (
