@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import { sidebarNavItems } from './navConfig'
+import './App.css'
 
 // Can't use PrismaClient directly in the browser
 // This is a placeholder a proof of concept
@@ -28,6 +30,7 @@ interface Epley {
 
 // Main App functionality
 function App() {
+  const [activePath, setActivePath] = useState('/logger')
   const [exercises, setExercises] = useState<Exercises[]>([])
   const [name, setName] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
@@ -290,19 +293,51 @@ const getExerciseName = (exerciseId: string) => {
 }
 
   return (
-    <div style={{ 
-      maxWidth: '800px',
-      margin: '0 auto',
-      padding: '2rem',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem' }}>Lift Logger</h1>
+    <div className="app-layout" data-active={activePath}>
+      <aside className="sidebar">
+        <div className="brand">
+          <strong>Lift Logger</strong>
+          <span>Training log</span>
+        </div>
+        <nav aria-label="Main navigation">
+          {sidebarNavItems.map(item => {
+            const Icon = item.icon
+            const isActive = activePath === item.path
+
+            return (
+              <button
+                key={item.path}
+                type="button"
+                className={`nav-item${isActive ? ' active' : ''}`}
+                onClick={() => setActivePath(item.path)}
+                disabled={item.disabled}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <Icon className="nav-icon" />
+                <span>{item.title}</span>
+              </button>
+            )
+          })}
+        </nav>
+      </aside>
+
+      <main className="main-content">
+        <div className="page-header">
+          <p className="eyebrow">YOUR TRAINING SPACE</p>
+          <h1>{sidebarNavItems.find(item => item.path === activePath)?.title ?? 'Logger'}</h1>
+        </div>
+        <div className="content-area" style={{ 
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: '2rem',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
       <p style={{ color: '#666', marginBottom: '2rem' }}>
         Track your workouts and calculate progressive overlaod.
       </p>
 
      {/* Exercise form*/}
-      <form onSubmit={addExercise} style={{ marginBottom: '2rem' }}>
+      <form className="section-exercises" onSubmit={addExercise} style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <input
             type="text"
@@ -362,7 +397,7 @@ const getExerciseName = (exerciseId: string) => {
       </form>
 
       {/* Set form */}
-      <form onSubmit={addSet} style={{ marginBottom: '2rem'}}>
+      <form className="section-logger section-sets" onSubmit={addSet} style={{ marginBottom: '2rem'}}>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
           <select
             value={selectedExerciseId}
@@ -445,7 +480,7 @@ const getExerciseName = (exerciseId: string) => {
       </form>
 
       <div style={{ display: 'flex', gap: '20px'}}>
-        <div>
+        <div className="section-exercises">
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
             Your Exercises ({exercises.length})
           </h2>
@@ -495,7 +530,7 @@ const getExerciseName = (exerciseId: string) => {
         </div>
       
         {/* Sets List*/}
-        <div> 
+        <div className="section-sets"> 
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
             Your Sets ({sets.length})
           </h2>
@@ -566,7 +601,7 @@ const getExerciseName = (exerciseId: string) => {
         </div>
 
         {/*Epley list*/}
-        <div> 
+        <div className="section-epley"> 
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
             1 Rep Max ({epleys.length})
           </h2>
@@ -622,6 +657,8 @@ const getExerciseName = (exerciseId: string) => {
           )}
         </div>
       </div>
+      </div>
+      </main>
     </div>
   )
 }
