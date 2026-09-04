@@ -31,7 +31,7 @@ interface Epley {
 
 // Main App functionality
 function App() {
-  const [activePath, setActivePath] = useState('/logger')
+  const [activePath, setActivePath] = useState(sidebarNavItems[0]?.path ?? '/sets')
   const [exercises, setExercises] = useState<Exercises[]>([])
   const [name, setName] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
@@ -362,7 +362,7 @@ const getExerciseName = (exerciseId: string) => {
       <main className="main-content">
         <div className="page-header">
           <p className="eyebrow">YOUR TRAINING SPACE</p>
-          <h1>{sidebarNavItems.find(item => item.path === activePath)?.title ?? 'Logger'}</h1>
+          <h1>{sidebarNavItems.find(item => item.path === activePath)?.title ?? 'Sets'}</h1>
         </div>
         <div className="content-area" style={{ 
           maxWidth: '800px',
@@ -435,7 +435,7 @@ const getExerciseName = (exerciseId: string) => {
       </form>
 
       {/* Set form */}
-      <form className="section-logger section-sets" onSubmit={addSet} style={{ marginBottom: '2rem'}}>
+      <form className="section-sets" onSubmit={addSet} style={{ marginBottom: '2rem'}}>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
           <select
             value={selectedExerciseId}

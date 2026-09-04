@@ -345,15 +345,11 @@
   background: #fbe9e7;
 }
 
-[data-active="/logger"] .section-exercises,
-[data-active="/logger"] .section-epley,
-[data-active="/exercises"] .section-logger,
 [data-active="/exercises"] .section-sets,
 [data-active="/exercises"] .section-epley,
 [data-active="/sets"] .section-exercises,
 [data-active="/sets"] .section-epley,
 [data-active="/epley"] .section-exercises,
-[data-active="/epley"] .section-logger,
 [data-active="/epley"] .section-sets {
   display: none;
 }
