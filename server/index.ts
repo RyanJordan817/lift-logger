@@ -9,6 +9,11 @@ import 'dotenv/config'
 const app = express()
 const port = 3001
 
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://lift-logger-three.vercel.app'
+]
+
 // handling database communication
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL!,
@@ -16,7 +21,10 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({adapter})
 
-app.use(cors())
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+}))
 app.use(express.json())
 
 app.get('/', (req, res) =>{
