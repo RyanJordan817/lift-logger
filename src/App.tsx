@@ -44,7 +44,7 @@ function App() {
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>('')
   const [epleys, setEpleys] = useState<Epley[]>([])
  
-  const API_BASE = 'http://localhost:3001'
+  const API_BASE =  'http://localhost:3001'
 
   useEffect(() => {
     fetchExercises()
