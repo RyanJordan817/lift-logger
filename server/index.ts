@@ -58,12 +58,6 @@ const createSetSchema = z.object({
     rpe: z.number().int('must be a whole number').min   (1, 'must be at least 1').max(10, 'must be between 1 and 10'),
 })
 
-const createEpleySchema = z.object({
-    exerciseId: id,
-    oneRM: z.number().positive('must be greater than 0'),
-    asOf: z.coerce.date().optional(),
-})
-
 const exerciseQuerySchema = z.object({
     exerciseId: id,
 })
@@ -271,40 +265,7 @@ app.delete('/sets/:id', async (req, res) => {
     }
 })
 
-// ---------- Epley -------------------------
-
-// Create
-app.post('/epley', async (req, res) => {
-    const parsed = createEpleySchema.safeParse(req.body)
-    if (!parsed.success) {
-        return res.status(400).json({ error: formatZodError(parsed.error) })
-    }
-
-    try {
-        const { exerciseId, oneRM, asOf } = parsed.data
-
-        const exercise = await findOwnedExercise(exerciseId, res.locals.userId)
-
-        if (!exercise) {
-            return res.status(404).json({ error: 'Exercise not found' })
-        }
-        
-        const epley = await prisma.epley.create({
-            data: {
-                exerciseId,
-                oneRM,
-                asOf: asOf ?? new Date()
-            }
-        })
-
-        res.status(201).json(epley)
-    } catch (error) {
-        console.log(`Post error: `, error)
-        res.status(500).json({error: `Failed to add epley`})
-    }
-})
-
-// Get
+// Derive the best Epley estimate for each exercise and UTC calendar day from its sets.
 app.get('/epley', async (req, res) => {
     const parsed = optionalExerciseQuerySchema.safeParse(req.query)
     if (!parsed.success) {
@@ -312,35 +273,52 @@ app.get('/epley', async (req, res) => {
     }
 
     try {
-        const epleys = await prisma.epley.findMany({
-            where:{exercise: { userId: res.locals.userId } ,
-            ...(parsed.data.exerciseId ? {exerciseId: parsed.data.exerciseId } : {}),
-        },
-            orderBy: { asOf: 'desc' },
-            take: 50,
+        const sets = await prisma.set.findMany({
+            where: {
+                exercise: { userId: res.locals.userId },
+                ...(parsed.data.exerciseId ? { exerciseId: parsed.data.exerciseId } : {}),
+            },
+            select: {
+                exerciseId: true,
+                weight: true,
+                reps: true,
+                loggedAt: true,
+            },
         })
-        
-        res.json(epleys)
+
+        const estimatesByDay = new Map<string, {
+            exerciseId: string
+            oneRM: number
+            asOf: string
+            weight: number
+            reps: number
+        }>()
+
+        for (const set of sets) {
+            const asOf = set.loggedAt.toISOString().slice(0, 10)
+            const key = `${set.exerciseId}:${asOf}`
+            const oneRM = epley1RM(set.weight, set.reps)
+            const currentBest = estimatesByDay.get(key)
+
+            if (!currentBest || oneRM > currentBest.oneRM) {
+                estimatesByDay.set(key, {
+                    exerciseId: set.exerciseId,
+                    oneRM,
+                    asOf,
+                    weight: set.weight,
+                    reps: set.reps,
+                })
+            }
+        }
+
+        const estimates = [...estimatesByDay.values()].sort((a, b) =>
+            b.asOf.localeCompare(a.asOf) || b.oneRM - a.oneRM
+        )
+
+        res.json(estimates)
     } catch (error) {
         console.log("GET error:", error)
-        res.status(500).json({error: 'Failed to get all sets'})
-    }
-})
-
-app.delete('/epley/:id', async (req, res) => {
-    try {
-        const result = await prisma.epley.deleteMany({ 
-            where: { id: req.params.id, exercise: { userId: res.locals.userId } } 
-        })
-
-        if (result.count === 0) {
-            return res.status(404).json({ error: '1RM record not found' })
-        } 
-
-        res.json({ success: true })
-    } catch (error) {
-        console.log('Delete error:', error)
-        res.status(500).json({ error: 'Failed to delete epley records' })
+        res.status(500).json({error: 'Failed to calculate 1RM history'})
     }
 })
 

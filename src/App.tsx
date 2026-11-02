@@ -23,10 +23,11 @@ interface Sets {
   loggedAt: string
 }
 
-interface Epley {
-  id: string
+interface OneRepMaxEstimate {
   exerciseId: string
   oneRM: number
+  weight: number
+  reps: number
   asOf: string
 }
 
@@ -43,7 +44,7 @@ function App() {
   const [reps, setReps] = useState<string>('')
   const [rpe, setRpe] = useState<string>('')
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>('')
-  const [epleys, setEpleys] = useState<Epley[]>([])
+  const [oneRepMaxHistory, setOneRepMaxHistory] = useState<OneRepMaxEstimate[]>([])
  
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
   const { getToken, isLoaded, isSignedIn } = useAuth()
@@ -65,13 +66,13 @@ function App() {
     if (!isSignedIn) {
       setExercises([])
       setSets([])
-      setEpleys([])
+      setOneRepMaxHistory([])
       setSelectedExerciseId('')
       return
     }
     fetchExercises()
     fetchSets()
-    fetchEpley()
+    fetchOneRepMaxHistory()
   }, [isSignedIn])
 
   // Featching all exercises in db
@@ -210,22 +211,7 @@ const addSet = async (e: React.FormEvent) => {
     console.log(`Set created`)
     setTimeout(() => setSuccessMsg(''), 3000)
 
-    if (newSet) {
-      //const oneRM = calcOneRepMax(newSet.exerciseId, newSet)
-      const result = await apiFetch(`/sets/getMax?exerciseId=${encodeURIComponent(selectedExerciseId)}`)
-
-      if (!result.ok) throw new Error(`Failed to fetch: ${result.status}`)
-      
-      const { oneRM } = await result.json()
-
-      if (oneRM !== null){
-        const newEpley = await addEpley(newSet.exerciseId, oneRM)
-
-        if (newEpley) {
-          setEpleys(prevEpleys => [newEpley, ...prevEpleys])
-        }
-      }
-    }
+    await fetchOneRepMaxHistory()
   } catch (error){
     console.error('Add set error', error)
     setError(error instanceof Error ? error.message : 'Failed to add set')
@@ -234,43 +220,16 @@ const addSet = async (e: React.FormEvent) => {
   }
 }
 
-const addEpley = async (exerciseId: string, oneRM: number) => {
-  try {
-    const res = await apiFetch(`/epley`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-          exerciseId: exerciseId,
-          oneRM: Math.round(oneRM * 10) / 10,
-          asOf: new Date().toISOString()
-      }),
-    })
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}))
-      throw new Error(errorData.error || `Failed to create epley. status: ${res.status}`)
-    }
-
-    const newEpley = await res.json()
-    console.log(`Epley added:`, newEpley)
-    return newEpley
-  } catch (error){
-    console.error('Add elpey error', error)
-    setError(error instanceof Error ? error.message : 'Failed to add epley')
-    return null
-  } 
-}
-
-const fetchEpley = async () => {
+const fetchOneRepMaxHistory = async () => {
   try {
     const res = await apiFetch(`/epley`)
     if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
     const data = await res.json()
-    setEpleys(data)
+    setOneRepMaxHistory(data)
     setError('')
   } catch (error) {
-    console.log('Failed to get sets:', error)
-    setError(error instanceof Error ? error.message : 'Failed to get sets')
+    console.log('Failed to get 1RM history:', error)
+    setError(error instanceof Error ? error.message : 'Failed to get 1RM history')
   }
 }
 
@@ -284,6 +243,7 @@ const deleteSet = async (setId: string) => {
     if (!res.ok) throw new Error('Failed to delete set.')
 
     setSets(currentSets => currentSets.filter(set => set.id !== setId))
+    await fetchOneRepMaxHistory()
     setSuccessMsg('Set deleted successfully!')
     setTimeout(() => setSuccessMsg(''), 3000)
   } catch (error) {
@@ -302,6 +262,8 @@ const deleteExercise = async (exerciseId: string) => {
     if (!res.ok) throw new Error('Failed to delete exercise.')
 
     setExercises(exercises.filter(e => e.id !== exerciseId))
+    setSets(currentSets => currentSets.filter(set => set.exerciseId !== exerciseId))
+    await fetchOneRepMaxHistory()
     setSuccessMsg('Exercise deleted successfully!')
     setTimeout(() => setSuccessMsg(''), 3000)
   } catch (error) {
@@ -309,25 +271,6 @@ const deleteExercise = async (exerciseId: string) => {
     setError(error instanceof Error ? error.message : 'Failed to delete exercise')
   }
 }
-
-const deleteEpley = async (epleyId: string) => {
-  if (!window.confirm('Delete this epley record?')) return
-  try {
-    const res = await apiFetch(`/epley/${epleyId}`, {
-      method: 'DELETE',
-    })
-
-    if (!res.ok) throw new Error('Failed to delete epley record.')
-
-    setEpleys(epleys.filter(e => e.id !== epleyId))
-    setSuccessMsg('Epley record deleted successfully!')
-    setTimeout(() => setSuccessMsg(''), 3000)
-  } catch (error) {
-    console.log('Delete error:', error)
-    setError(error instanceof Error ? error.message : 'Failed to delete epley record')
-  }
-}
-
 
 /*const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
 
@@ -759,10 +702,10 @@ const getExerciseName = (exerciseId: string) => {
         {/*Epley list*/}
         <div className="section-epley"> 
           <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
-            1 Rep Max ({epleys.length})
+            1 Rep Max History ({oneRepMaxHistory.length})
           </h2>
 
-          {epleys.length === 0 ? (
+          {oneRepMaxHistory.length === 0 ? (
             <div style={{ 
               padding: '2rem', 
               backgroundColor: '#f9f9f9',
@@ -770,12 +713,12 @@ const getExerciseName = (exerciseId: string) => {
               textAlign: 'center',
               color: '#999'
             }}>
-              1RM not logged yet. Add this will populate with sets!
+              No 1RM estimates yet. Log a set to calculate one.
             </div>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {epleys.map((epleys, idx) => (
-                <li key={epleys.id || idx} 
+              {oneRepMaxHistory.map(estimate => (
+                <li key={`${estimate.exerciseId}-${estimate.asOf}`}
                   style={{
                     padding: '1rem',
                     marginBottom: '0.5rem',
@@ -788,46 +731,17 @@ const getExerciseName = (exerciseId: string) => {
                     gap: '0.5rem'
                 }}>
                   <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}> 
-                    {getExerciseName(epleys.exerciseId)} - 1RM: {epleys.oneRM}
-                     <i 
-                      onClick = {() => deleteEpley(epleys.id)}
-                      style = {{
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        color: '#d32f2f',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#ffebee'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                      }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation() //Prevent event bubbling
-                      }
-                      }
-                    >
-                      <Trash />
-                    </i>
+                    {getExerciseName(estimate.exerciseId)} - 1RM: {estimate.oneRM.toFixed(1)}
                   </span>
-                  <span style={{ fontSize: '0.85rem', color: '#555', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {sets.map((sets, idx) => (
-                      sets.exerciseId === epleys.exerciseId && (
-                      <span key={sets.id || idx}>
-                        Set: {sets.reps}x{sets.weight}
-                      </span>
-                    )))}
+                  <span style={{ fontSize: '0.85rem', color: '#555' }}>
+                    Best set: {estimate.reps} reps x {estimate.weight}
                   </span>  
                   <span style={{ fontSize: '0.85rem', color: "#888" }}>
-                    {new Date(epleys.asOf).toLocaleDateString('en-US', {
+                    {new Date(`${estimate.asOf}T00:00:00Z`).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
+                      timeZone: 'UTC',
                     })}
                   </span>
                 </li>

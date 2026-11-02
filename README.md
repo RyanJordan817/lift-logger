@@ -24,7 +24,12 @@ A workout tracking app that calculate progressive overload using the Epley formu
 2. cd lift-logger
 3. Run `npm install`
 4. Add your `DATABASE_URL` to `.env` (e.g. DATABASE_URL=postgressql://...)
-5. Run `npm run dev:all`
+5. For a new database, run `npx prisma migrate deploy`
+6. Run `npm run dev:all`
+
+The 1RM history is derived from logged sets using the Epley formula. Each history entry is the best estimate for an exercise on a UTC calendar day; deleting a set or exercise updates the derived history.
+
+Existing databases created with `db push` have no migration baseline. Before using migrations on one, verify its schema matches the initial migration and mark that baseline as applied with `npx prisma migrate resolve --applied 20261102160000_init`. Then `npx prisma migrate deploy` applies the follow-up migration, which removes the old `Epley` snapshots and table; logged sets are retained.
 
 ## Deployment 
 - Frontend: Deployed on Vercel

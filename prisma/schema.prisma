@@ -12,7 +12,6 @@ model Exercise {
   userId String
   createdAt DateTime @default(now())
   sets Set[]
-  epley Epley[]
   @@unique([name, userId])
 }
 
@@ -24,12 +23,4 @@ model Set {
   reps Int
   rpe Int
   loggedAt DateTime @default(now())
-}
-
-model Epley {
-  id String @id @default(cuid())
-  exerciseId String
-  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-  oneRM Float
-  asOf DateTime @default(now())
 }
