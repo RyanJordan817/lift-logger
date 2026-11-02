@@ -1,4 +1,4 @@
-import { NavItem } from './types';
+import type { NavItem } from './types'
 import { BicepsFlexed, Dumbbell, Scale } from 'lucide-react';
 
 export const sidebarNavItems: NavItem[] = [

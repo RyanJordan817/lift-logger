@@ -1,756 +1,127 @@
-import React, { useEffect, useState } from 'react'
 import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/react'
+import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { sidebarNavItems } from './navConfig'
-import { Trash } from 'lucide-react'
-import './App.css'
+import { useLiftLogger } from './hooks/useLiftLogger'
+import { ExercisesPage } from './pages/ExercisesPage'
+import { OneRepMaxPage } from './pages/OneRepMaxPage'
+import { SetsPage } from './pages/SetsPage'
+import styles from './App.module.css'
 
-// Can't use PrismaClient directly in the browser
-// This is a placeholder a proof of concept
-
-interface Exercises {
-  id: string
-  name: string
-  userId: string
-  createdAt: string
-}
-
-interface Sets {
-  id: string
-  exerciseId: string
-  weight: number
-  reps: number
-  rpe: number
-  loggedAt: string
-}
-
-interface OneRepMaxEstimate {
-  exerciseId: string
-  oneRM: number
-  weight: number
-  reps: number
-  asOf: string
-}
-
-// Main App functionality
 function App() {
-  const [activePath, setActivePath] = useState(sidebarNavItems[0]?.path ?? '/sets')
-  const [exercises, setExercises] = useState<Exercises[]>([])
-  const [name, setName] = useState<string>('')
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
-  const [successMsg, setSuccessMsg] = useState<string>('')
-  const [sets, setSets] = useState<Sets[]>([])
-  const [weight, setWeight] = useState<string>('')
-  const [reps, setReps] = useState<string>('')
-  const [rpe, setRpe] = useState<string>('')
-  const [selectedExerciseId, setSelectedExerciseId] = useState<string>('')
-  const [oneRepMaxHistory, setOneRepMaxHistory] = useState<OneRepMaxEstimate[]>([])
- 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-  const { getToken, isLoaded, isSignedIn } = useAuth()
-
-  // fetch wrapper that attaches the Clerk seesion token so the API knows who is making calls
-  const apiFetch = async (path: string, init: RequestInit = {}) => {
-    const token = await getToken()
-    return fetch(`${API_BASE}${path}`, {
-      ...init,
-      headers: {
-        ...(init.headers ?? {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    })
-  }
-
-  // Want to load the signed-in user's data; clear when sign-out
-  useEffect(() => {
-    if (!isSignedIn) {
-      setExercises([])
-      setSets([])
-      setOneRepMaxHistory([])
-      setSelectedExerciseId('')
-      return
-    }
-    fetchExercises()
-    fetchSets()
-    fetchOneRepMaxHistory()
-  }, [isSignedIn])
-
-  // Featching all exercises in db
-  const fetchExercises = async () => {
-    try {
-      const res = await apiFetch(`/exercises`)
-      if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
-
-      const data = await res.json()
-      setExercises(data)
-      setError('')
-
-      /*if (data.length > 0) {
-        setSelectedExerciseId(data.id)
-      }*/
-    } catch (error) {
-      console.error('Fetch error:', error)
-      setError('Failed to load exercises. Ensure the backend is running!')
-    }
-  } 
-
-// adding an exercise to the db
-const addExercise = async (e: React.FormEvent) => {
-  e.preventDefault()
-  const trimmedName = name.trim()
-  if (!trimmedName) {
-    setError("Please enter an exercise name")
-    return
-  }
-
-  setLoading(true)
-  setError('')
-  setSuccessMsg('')
-
-  try {
-    const res = await apiFetch(`/exercises`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name: trimmedName.toLowerCase(),
-        userId: 'test-user'
-      }),
-    })
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}))
-      throw new Error(errorData.error || `Failed to create exercise. status: ${res.status}`)
-    }
-
-    const newExercise = await res.json()
-
-    console.log(`newExerciseI.id is : ${newExercise.id}`) 
-    setSelectedExerciseId(newExercise.id)
-
-    setExercises([newExercise, ...exercises])
-    setName('')
-    setSuccessMsg(`Added ${trimmedName} sucessfully!`)
-    console.log(`Exercise created`)
-    setTimeout(() => setSuccessMsg(''), 3000)
-  } catch (error) {
-    console.error('Add exercis error', error)
-    setError(error instanceof Error ? error.message : 'Failed to add exercise')
-  } finally {
-    setLoading(false)
-  }
-}
-
-const fetchSets = async () => {
-  try {
-    const res = await apiFetch(`/sets`)
-    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
-    const data = await res.json()
-    setSets(data)
-    setError('')
-  } catch (error) {
-    console.log('Failed to get sets:', error)
-    setError(error instanceof Error ? error.message : 'Failed to get sets')
-  }
-}
-
-const addSet = async (e: React.FormEvent) => {
-  e.preventDefault()
-  
-  setError('')
-  setSuccessMsg('')
-
-  if (!selectedExerciseId) {
-    setError('Please select an exercise to track sets')
-    return
-  }
-
-  const weightNum = parseFloat(weight)
-  const repNum = parseInt(reps, 10)
-  const rpeNum = parseInt(rpe, 10)
-
-  if (Number.isNaN(weightNum) || weightNum <= 0) {
-    setError('Weight must be a number greater than 0')
-    return
-  }
-  if (Number.isNaN(repNum) || repNum < 1) {
-    setError('Reps must be a whole number of at least 1')
-    return
-  }
-  if (Number.isNaN(rpeNum) || rpeNum < 1 || rpeNum > 10) {
-    setError('RPE must be a whole number from 1 to 10')
-    return
-  }
- 
-  setLoading(true)
-
-  try {
-    const res = await apiFetch(`/sets`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        exerciseId: selectedExerciseId,
-        weight: weightNum,
-        reps: repNum,
-        rpe: rpeNum
-      }),
-    })
-    
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}))
-      throw new Error(errorData.error || `Failed to create set. status: ${res.status}`)
-    }
-
-    const newSet = await res.json()
-    setSets([newSet, ...sets])
-    setWeight('')
-    setReps('')
-    setRpe('')
-    setSuccessMsg(`Set created`)
-    console.log(`Set created`)
-    setTimeout(() => setSuccessMsg(''), 3000)
-
-    await fetchOneRepMaxHistory()
-  } catch (error){
-    console.error('Add set error', error)
-    setError(error instanceof Error ? error.message : 'Failed to add set')
-  } finally {
-    setLoading(false)
-  }
-}
-
-const fetchOneRepMaxHistory = async () => {
-  try {
-    const res = await apiFetch(`/epley`)
-    if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
-    const data = await res.json()
-    setOneRepMaxHistory(data)
-    setError('')
-  } catch (error) {
-    console.log('Failed to get 1RM history:', error)
-    setError(error instanceof Error ? error.message : 'Failed to get 1RM history')
-  }
-}
-
-const deleteSet = async (setId: string) => {
-  if (!window.confirm('Delete this set?')) return
-  try {
-    const res = await apiFetch(`/sets/${setId}`, {
-      method: 'DELETE',
-    })
-
-    if (!res.ok) throw new Error('Failed to delete set.')
-
-    setSets(currentSets => currentSets.filter(set => set.id !== setId))
-    await fetchOneRepMaxHistory()
-    setSuccessMsg('Set deleted successfully!')
-    setTimeout(() => setSuccessMsg(''), 3000)
-  } catch (error) {
-    console.log('Delete error:', error)
-    setError(error instanceof Error ? error.message : 'Failed to delete set')
-  }
-}
-
-const deleteExercise = async (exerciseId: string) => {
-  if (!window.confirm('Delete this exercise?')) return
-  try {
-    const res = await apiFetch(`/exercises/${exerciseId}`, {
-      method: 'DELETE',
-    })
-
-    if (!res.ok) throw new Error('Failed to delete exercise.')
-
-    setExercises(exercises.filter(e => e.id !== exerciseId))
-    setSets(currentSets => currentSets.filter(set => set.exerciseId !== exerciseId))
-    await fetchOneRepMaxHistory()
-    setSuccessMsg('Exercise deleted successfully!')
-    setTimeout(() => setSuccessMsg(''), 3000)
-  } catch (error) {
-    console.log('Delete error:', error)
-    setError(error instanceof Error ? error.message : 'Failed to delete exercise')
-  }
-}
-
-/*const calcOneRepMax = (exerciseId: string, lastestSet?: any) => {
-
-  if (lastestSet) {
-    const { weight, reps } = lastestSet
-    if (weight > 0 && reps > 0){
-      const oneRM = weight * (1 + reps / 30)
-      console.log(`1RM for lastest set: ${oneRM.toFixed(1)}`)
-      return oneRM
-    }
-  }
-
-  const setsForExercise = sets.filter(s => s.exerciseId === exerciseId)
-
-  if (setsForExercise.length === 0) {
-    console.error(`No sets foundfor exercise ${exerciseId}`)
-    return null
-  }
-
-  const latest = setsForExercise[setsForExercise.length - 1]
-
-  const { weight, reps } = latest
-
-  if (weight > 0 && reps > 0) {
-    const oneRM = weight * ((1 + reps) / 30)
-    console.log(`One rep max for ${exerciseId} is ${oneRM.toFixed(1)}`)
-    return oneRM
-  } 
-
-  return null
-  
-}*/
-
-const getExerciseName = (exerciseId: string) => {
-  const exercise = exercises.find(e => e.id === exerciseId)
-  return exercise ? exercise.name : 'Unknown'
-}
+  const { isLoaded, isSignedIn } = useAuth()
 
   if (!isLoaded) {
-    return (
-      <div className="app-layout">
-        <main className="main-content">
-          <p>Loading...</p>
-        </main>
-      </div>
-    )
+    return <main className={styles.loading}>Loading Lift Logger...</main>
   }
 
   if (!isSignedIn) {
     return (
-      <div className="app-layout">
-        <main className="main-content">
-          <div className="page-header">
-            <p className="eyebrow">Lift Logger</p>
-            <h1>Track you lifts. See your strength grow.</h1>
+      <main className={styles.authPage}>
+        <div className={styles.authCard}>
+          <p className={styles.eyebrow}>LIFT LOGGER</p>
+          <h1 className={styles.pageTitle}>Track your lifts. See your strength grow.</h1>
+          <p className={styles.description}>
+            Log sets with weight, reps, and RPE, and track estimated one-rep max over time.
+            Sign in to start tracking.
+          </p>
+          <div className={styles.authActions}>
+            <SignInButton mode="modal">
+              <button className={styles.primaryButton} type="button">Sign in</button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button className={styles.secondaryButton} type="button">Sign up</button>
+            </SignUpButton>
           </div>
-          <div className="content-area" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
-            <p style={{ marginBottom: '1.5rem' }}>
-              Log sets with weight, reps and RPE, and get an automatic estimated one-rep max
-              using the Epley formula. Sign in to start tracking.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <SignInButton mode="modal">
-                <button type="button" style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}>
-                  Sign in
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button type="button" style={{
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '1rem',
-                  backgroundColor: 'transparent',
-                  color: '#2196F3',
-                  border: '1px solid #2196F3',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}>
-                  Sign up
-                </button>
-              </SignUpButton>
-            </div>
-          </div>
-        </main>
-      </div>
+        </div>
+      </main>
     )
   }
 
+  return <AuthenticatedApp />
+}
+
+function AuthenticatedApp() {
+  const {
+    exercises,
+    sets,
+    oneRepMaxHistory,
+    selectedExerciseId,
+    setSelectedExerciseId,
+    loading,
+    error,
+    success,
+    addExercise,
+    deleteExercise,
+    addSet,
+    deleteSet,
+  } = useLiftLogger()
+
   return (
-    <div className="app-layout" data-active={activePath}>
-      <aside className="sidebar">
-        <div className="brand">
+    <div className={styles.appLayout}>
+      <aside className={styles.sidebar}>
+        <div className={styles.brand}>
           <strong>Lift Logger</strong>
           <span>Training log</span>
         </div>
-        <nav aria-label="Main navigation">
+        <nav className={styles.navigation} aria-label="Main navigation">
           {sidebarNavItems.map(item => {
             const Icon = item.icon
-            const isActive = activePath === item.path
-
             return (
-              <button
+              <NavLink
+                className={({ isActive }) =>
+                  `${styles.navLink}${isActive ? ` ${styles.navLinkActive}` : ''}`
+                }
                 key={item.path}
-                type="button"
-                className={`nav-item${isActive ? ' active' : ''}`}
-                onClick={() => setActivePath(item.path)}
-                disabled={item.disabled}
-                aria-current={isActive ? 'page' : undefined}
+                to={item.path}
+                end
               >
-                <Icon className="nav-icon" />
+                <Icon className={styles.navIcon} aria-hidden="true" />
                 <span>{item.title}</span>
-              </button>
+              </NavLink>
             )
           })}
         </nav>
+        <div className={styles.userButton}>
+          <UserButton />
+        </div>
       </aside>
 
-      <main className="main-content">
-        <div className="page-header">
-          <p className="eyebrow">YOUR TRAINING SPACE</p>
-          <h1>{sidebarNavItems.find(item => item.path === activePath)?.title ?? 'Sets'}</h1>
-        </div>
-        <div className="content-area" style={{ 
-          maxWidth: '800px',
-          margin: '0 auto',
-          padding: '2rem',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
-        }}>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
-        Track your workouts and calculate progressive overlaod.
-      </p>
-
-     {/* Exercise form*/}
-      <form className="section-exercises" onSubmit={addExercise} style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder='Enter exercise name (e.g., Bench Press)'
-            style={{
-              flex: 1,
-              minWidth: '200px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              transition: 'border-color 0.2s'
-            }}
+      <main className={styles.mainContent}>
+        {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+        {success && <p className={styles.successMessage} role="status">{success}</p>}
+        <Routes>
+          <Route path="/" element={<Navigate to="/exercises" replace />} />
+          <Route
+            path="/exercises"
+            element={
+              <ExercisesPage
+                exercises={exercises}
+                loading={loading}
+                onAdd={addExercise}
+                onDelete={deleteExercise}
+              />
+            }
           />
-          <button
-            type="submit"
-            disabled={loading || !name.trim()}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: loading ? '#aaa' : '#4CAF50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: loading ? 'default' : 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            {loading ? 'Adding...' : 'Add Exercise'}
-          </button>
-        </div>
-        {error && (
-          <div style= {{ 
-            padding: '0.75rem', 
-            backgroundColor: '#ffebee', 
-            color: '#c62828', 
-            borderRadius: '6px',
-            marginBottom: '1rem' 
-          }}>
-            {error}
-          </div>
-        )}
-
-        {successMsg && (
-          <div style={{
-            padding: '0.75rem', 
-            backgroundColor: '#e8f5e9', 
-            color: '#2e7d32', 
-            borderRadius: '6px',
-            marginBottom: '1rem' 
-          }}>
-            {successMsg}
-          </div>
-        )}
-      </form>
-
-      {/* Set form */}
-      <form className="section-sets" onSubmit={addSet} style={{ marginBottom: '2rem'}}>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
-          <select
-            value={selectedExerciseId}
-            onChange={(e) => setSelectedExerciseId(e.target.value)}
-            style={{ 
-              flex: 1,
-              minWidth: '200px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-            }}
-          >
-            <option value="">Select an exercise</option>
-            {exercises.map(ex => (
-              <option key={ex.id} value={ex.id}>{ex.name}</option>
-            ))}
-          </select>
-          <input
-            type="text"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-            placeholder='Enter Weight (lbs)'
-            style={{
-              flex: 1,
-              minWidth: '200px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              transition: 'border-color 0.2s'
-            }}
+          <Route
+            path="/sets"
+            element={
+              <SetsPage
+                exercises={exercises}
+                sets={sets}
+                selectedExerciseId={selectedExerciseId}
+                loading={loading}
+                onExerciseChange={setSelectedExerciseId}
+                onAdd={addSet}
+                onDelete={deleteSet}
+              />
+            }
           />
-          <input
-            type="text"
-            value={reps}
-            onChange={(e) => setReps(e.target.value)}
-            placeholder='Enter rep amount'
-            style={{
-              flex: 1,
-              minWidth: '200px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              transition: 'border-color 0.2s'
-            }}
+          <Route
+            path="/epley"
+            element={<OneRepMaxPage exercises={exercises} estimates={oneRepMaxHistory} />}
           />
-          <input
-            type="text"
-            value={rpe}
-            onChange={(e) => setRpe(e.target.value)}
-            placeholder='Enter RPE (Rate of Percieved Effort) from 1-10'
-            style={{
-              flex: 1,
-              minWidth: '200px',
-              padding: '0.75rem',
-              fontSize: '1rem',
-              border: '1px solid #ddd',
-              borderRadius: '6px',
-              transition: 'border-color 0.2s'
-            }}
-          />
-          <button
-            type='submit'
-            disabled={loading || !selectedExerciseId}
-            style={{
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              backgroundColor: loading || !selectedExerciseId ? '#aaa' : '#2196F3',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: loading || !selectedExerciseId ? 'defualt' : 'pointer'
-            }}
-          >
-            {loading ? 'Logging...' : 'Log Set'}
-          </button>
-        </div>
-      </form>
-
-      <div style={{ display: 'flex', gap: '20px'}}>
-        <div className="section-exercises">
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
-            Your Exercises ({exercises.length})
-          </h2>
-
-          {/* Exersices List */}
-          {exercises.length === 0 ? (
-            <div style={{ 
-              padding: '2rem', 
-              backgroundColor: '#f9f9f9',
-              borderRadius: '6px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              No exercises logged yet. Add one above!
-            </div>
-          ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {exercises.map((exercises, idx) => (
-                <li key={exercises.id || idx} 
-                  style={{
-                    padding: '1rem',
-                    marginBottom: '0.5rem',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '0.5rem'
-                }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}> 
-                    {exercises.name}
-
-                    <i 
-                      onClick = {() => deleteExercise(exercises.id)}
-                      style = {{
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        color: '#d32f2f',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#ffebee'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                      }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation() //Prevent event bubbling
-                      }
-                      }
-                    >
-                      <Trash />
-                    </i>
-                  </span>
-                  <span style={{ fontSize: '0.85rem', color: "#888" }}>
-                    {new Date(exercises.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      
-        {/* Sets List*/}
-        <div className="section-sets"> 
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
-            Your Sets ({sets.length})
-          </h2>
-
-          {sets.length === 0 ? (
-            <div style={{ 
-              padding: '2rem', 
-              backgroundColor: '#f9f9f9',
-              borderRadius: '6px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              No sets logged yet. Add one above!
-            </div>
-          ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {sets.map((sets, idx) => (
-                <li key={sets.id || idx} 
-                  style={{
-                    padding: '1rem',
-                    marginBottom: '0.5rem',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '0.5rem'
-                }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold', fontSize: '1.05rem' }}> 
-                    {getExerciseName(sets.exerciseId)} - {sets.reps}x{sets.weight} - {sets.rpe}/10
-                    <i 
-                      onClick = {() => deleteSet(sets.id)}
-                      style = {{
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        color: '#d32f2f',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#ffebee'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                      }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation() //Prevent event bubbling
-                      }
-                      }
-                    >
-                      <Trash />
-                    </i>
-                  </span>
-                  <span style={{ fontSize: '0.85rem', color: "#888" }}>
-                    {new Date(sets.loggedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/*Epley list*/}
-        <div className="section-epley"> 
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem'}}> 
-            1 Rep Max History ({oneRepMaxHistory.length})
-          </h2>
-
-          {oneRepMaxHistory.length === 0 ? (
-            <div style={{ 
-              padding: '2rem', 
-              backgroundColor: '#f9f9f9',
-              borderRadius: '6px',
-              textAlign: 'center',
-              color: '#999'
-            }}>
-              No 1RM estimates yet. Log a set to calculate one.
-            </div>
-          ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {oneRepMaxHistory.map(estimate => (
-                <li key={`${estimate.exerciseId}-${estimate.asOf}`}
-                  style={{
-                    padding: '1rem',
-                    marginBottom: '0.5rem',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '0.5rem'
-                }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}> 
-                    {getExerciseName(estimate.exerciseId)} - 1RM: {estimate.oneRM.toFixed(1)}
-                  </span>
-                  <span style={{ fontSize: '0.85rem', color: '#555' }}>
-                    Best set: {estimate.reps} reps x {estimate.weight}
-                  </span>  
-                  <span style={{ fontSize: '0.85rem', color: "#888" }}>
-                    {new Date(`${estimate.asOf}T00:00:00Z`).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      timeZone: 'UTC',
-                    })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-      </div>
+          <Route path="*" element={<Navigate to="/exercises" replace />} />
+        </Routes>
       </main>
     </div>
   )
