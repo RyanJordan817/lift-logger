@@ -37,6 +37,6 @@ Existing databases created with `db push` have no migration baseline. Before usi
 - Database: Hosted on Neon
 
 ## Status
-**Working Features:** Exercise tracking, set logging, 1RM calculations, RPE Tracking
+**Working Features:** Exercise tracking, set logging, 1RM calculations, RPE Tracking, User Authentication
 
-**Comming Soon:** User authentication, progress charts, search/filters for exercises/sets/1RM
+**Comming Soon:** progress charts, search/filters for exercises/sets/1RM
