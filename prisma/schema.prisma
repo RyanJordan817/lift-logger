@@ -30,6 +30,6 @@ model Epley {
   id String @id @default(cuid())
   exerciseId String
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
-  oneRM Int
+  oneRM Float
   asOf DateTime @default(now())
 }

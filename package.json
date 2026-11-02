@@ -10,6 +10,8 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
+    "@clerk/express": "^2.1.86",
+    "@clerk/react": "^6.18.4",
     "@mdi/font": "^7.4.47",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.10.0",
@@ -18,13 +20,14 @@
     "express": "^5.2.1",
     "lucide-react": "^1.39.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^24.13.3",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",

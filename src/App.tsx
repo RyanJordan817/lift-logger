@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/react'
 import { sidebarNavItems } from './navConfig'
 import { Trash } from 'lucide-react'
 import './App.css'
@@ -45,17 +46,38 @@ function App() {
   const [epleys, setEpleys] = useState<Epley[]>([])
  
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+  const { getToken, isLoaded, isSignedIn } = useAuth()
 
+  // fetch wrapper that attaches the Clerk seesion token so the API knows who is making calls
+  const apiFetch = async (path: string, init: RequestInit = {}) => {
+    const token = await getToken()
+    return fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        ...(init.headers ?? {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    })
+  }
+
+  // Want to load the signed-in user's data; clear when sign-out
   useEffect(() => {
+    if (!isSignedIn) {
+      setExercises([])
+      setSets([])
+      setEpleys([])
+      setSelectedExerciseId('')
+      return
+    }
     fetchExercises()
     fetchSets()
     fetchEpley()
-  }, [])
+  }, [isSignedIn])
 
   // Featching all exercises in db
   const fetchExercises = async () => {
     try {
-      const res = await fetch(`${API_BASE}/exercises`)
+      const res = await apiFetch(`/exercises`)
       if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
 
       const data = await res.json()
@@ -85,7 +107,7 @@ const addExercise = async (e: React.FormEvent) => {
   setSuccessMsg('')
 
   try {
-    const res = await fetch(`${API_BASE}/exercises`, {
+    const res = await apiFetch(`/exercises`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -121,7 +143,7 @@ const addExercise = async (e: React.FormEvent) => {
 
 const fetchSets = async () => {
   try {
-    const res = await fetch(`${API_BASE}/sets`)
+    const res = await apiFetch(`/sets`)
     if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
     const data = await res.json()
     setSets(data)
@@ -135,7 +157,6 @@ const fetchSets = async () => {
 const addSet = async (e: React.FormEvent) => {
   e.preventDefault()
   
-  setLoading(true)
   setError('')
   setSuccessMsg('')
 
@@ -145,11 +166,26 @@ const addSet = async (e: React.FormEvent) => {
   }
 
   const weightNum = parseFloat(weight)
-  const repNum = parseInt(reps)
-  const rpeNum = parseInt(rpe)
+  const repNum = parseInt(reps, 10)
+  const rpeNum = parseInt(rpe, 10)
+
+  if (Number.isNaN(weightNum) || weightNum <= 0) {
+    setError('Weight must be a number greater than 0')
+    return
+  }
+  if (Number.isNaN(repNum) || repNum < 1) {
+    setError('Reps must be a whole number of at least 1')
+    return
+  }
+  if (Number.isNaN(rpeNum) || rpeNum < 1 || rpeNum > 10) {
+    setError('RPE must be a whole number from 1 to 10')
+    return
+  }
+ 
+  setLoading(true)
 
   try {
-    const res = await fetch(`${API_BASE}/sets`, {
+    const res = await apiFetch(`/sets`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -176,7 +212,7 @@ const addSet = async (e: React.FormEvent) => {
 
     if (newSet) {
       //const oneRM = calcOneRepMax(newSet.exerciseId, newSet)
-      const result = await fetch(`${API_BASE}/sets/getMax?exerciseId=${encodeURIComponent(selectedExerciseId)}`)
+      const result = await apiFetch(`/sets/getMax?exerciseId=${encodeURIComponent(selectedExerciseId)}`)
 
       if (!result.ok) throw new Error(`Failed to fetch: ${result.status}`)
       
@@ -200,7 +236,7 @@ const addSet = async (e: React.FormEvent) => {
 
 const addEpley = async (exerciseId: string, oneRM: number) => {
   try {
-    const res = await fetch(`${API_BASE}/epley`, {
+    const res = await apiFetch(`/epley`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -227,7 +263,7 @@ const addEpley = async (exerciseId: string, oneRM: number) => {
 
 const fetchEpley = async () => {
   try {
-    const res = await fetch(`${API_BASE}/epley`)
+    const res = await apiFetch(`/epley`)
     if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
     const data = await res.json()
     setEpleys(data)
@@ -241,7 +277,7 @@ const fetchEpley = async () => {
 const deleteSet = async (setId: string) => {
   if (!window.confirm('Delete this set?')) return
   try {
-    const res = await fetch(`${API_BASE}/sets/${setId}`, {
+    const res = await apiFetch(`/sets/${setId}`, {
       method: 'DELETE',
     })
 
@@ -259,7 +295,7 @@ const deleteSet = async (setId: string) => {
 const deleteExercise = async (exerciseId: string) => {
   if (!window.confirm('Delete this exercise?')) return
   try {
-    const res = await fetch(`${API_BASE}/exercises/${exerciseId}`, {
+    const res = await apiFetch(`/exercises/${exerciseId}`, {
       method: 'DELETE',
     })
 
@@ -277,7 +313,7 @@ const deleteExercise = async (exerciseId: string) => {
 const deleteEpley = async (epleyId: string) => {
   if (!window.confirm('Delete this epley record?')) return
   try {
-    const res = await fetch(`${API_BASE}/epley/${epleyId}`, {
+    const res = await apiFetch(`/epley/${epleyId}`, {
       method: 'DELETE',
     })
 
@@ -329,6 +365,63 @@ const getExerciseName = (exerciseId: string) => {
   const exercise = exercises.find(e => e.id === exerciseId)
   return exercise ? exercise.name : 'Unknown'
 }
+
+  if (!isLoaded) {
+    return (
+      <div className="app-layout">
+        <main className="main-content">
+          <p>Loading...</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (!isSignedIn) {
+    return (
+      <div className="app-layout">
+        <main className="main-content">
+          <div className="page-header">
+            <p className="eyebrow">Lift Logger</p>
+            <h1>Track you lifts. See your strength grow.</h1>
+          </div>
+          <div className="content-area" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+            <p style={{ marginBottom: '1.5rem' }}>
+              Log sets with weight, reps and RPE, and get an automatic estimated one-rep max
+              using the Epley formula. Sign in to start tracking.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <SignInButton mode="modal">
+                <button type="button" style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}>
+                  Sign in
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button type="button" style={{
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  backgroundColor: 'transparent',
+                  color: '#2196F3',
+                  border: '1px solid #2196F3',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}>
+                  Sign up
+                </button>
+              </SignUpButton>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="app-layout" data-active={activePath}>
