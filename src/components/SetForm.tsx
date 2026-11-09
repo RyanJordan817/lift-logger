@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import type { Exercise } from '../types'
 import styles from '../App.module.css'
 
@@ -21,7 +21,7 @@ export function SetForm({
   const [reps, setReps] = useState('')
   const [rpe, setRpe] = useState('')
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!selectedExerciseId) return
 
@@ -39,13 +39,13 @@ export function SetForm({
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={event => { void handleSubmit(event) }}>
       <label className={styles.field}>
         <span className={styles.label}>Exercise</span>
         <select
           className={styles.input}
           value={selectedExerciseId}
-          onChange={event => onExerciseChange(event.target.value)}
+          onChange={event => { onExerciseChange(event.target.value) }}
           required
         >
           <option value="">Select an exercise</option>
@@ -63,7 +63,7 @@ export function SetForm({
           max="2000"
           step="any"
           value={weight}
-          onChange={event => setWeight(event.target.value)}
+          onChange={event => { setWeight(event.target.value) }}
           required
         />
       </label>
@@ -76,7 +76,7 @@ export function SetForm({
           max="100"
           step="1"
           value={reps}
-          onChange={event => setReps(event.target.value)}
+          onChange={event => { setReps(event.target.value) }}
           required
         />
       </label>
@@ -89,7 +89,7 @@ export function SetForm({
           max="10"
           step="1"
           value={rpe}
-          onChange={event => setRpe(event.target.value)}
+          onChange={event => { setRpe(event.target.value) }}
           required
         />
       </label>

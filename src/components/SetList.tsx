@@ -29,7 +29,7 @@ export function SetList({ exercises, sets, onDelete }: SetListProps) {
           {sets.map(set => (
             <li className={styles.listItem} key={set.id}>
               <span className={styles.itemTitle}>
-                {exerciseNames.get(set.exerciseId) ?? 'Exercise'} · {set.reps} × {set.weight} lb · RPE {set.rpe}
+                {exerciseNames.get(set.exerciseId) ?? 'Exercise'} · {String(set.reps)} × {String(set.weight)} lb · RPE {set.rpe}
               </span>
               <time className={styles.itemMeta} dateTime={set.loggedAt}>
                 {new Date(set.loggedAt).toLocaleString()}
@@ -37,8 +37,8 @@ export function SetList({ exercises, sets, onDelete }: SetListProps) {
               <button
                 className={styles.deleteButton}
                 type="button"
-                aria-label={`Delete set: ${set.reps} reps at ${set.weight} pounds`}
-                onClick={() => handleDelete(set)}
+                aria-label={`Delete set: ${String(set.reps)} reps at ${String(set.weight)} pounds`}
+                onClick={() => { handleDelete(set) }}
               >
                 <Trash2 aria-hidden="true" size={18} />
               </button>

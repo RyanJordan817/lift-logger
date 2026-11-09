@@ -9,7 +9,7 @@ interface SetInput {
   rpe: number
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 
 export function useLiftLogger() {
   const { getToken, isLoaded, isSignedIn } = useAuth()
@@ -37,7 +37,7 @@ export function useLiftLogger() {
       const message =
         typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
           ? data.error
-          : `Request failed with status ${response.status}`
+          : `Request failed with status ${String(response.status)}`
       throw new Error(message)
     }
 

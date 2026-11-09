@@ -33,7 +33,7 @@ export function ExerciseList({ exercises, onDelete }: ExerciseListProps) {
                 className={styles.deleteButton}
                 type="button"
                 aria-label={`Delete ${exercise.name}`}
-                onClick={() => handleDelete(exercise)}
+                onClick={() => { handleDelete(exercise) }}
               >
                 <Trash2 aria-hidden="true" size={18} />
               </button>

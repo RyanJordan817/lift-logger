@@ -18,8 +18,13 @@ const allowedOrigins = [
 ]
 
 // handling database communication
+const databaseUrl = process.env.DATABASE_URL
+if (!databaseUrl) {
+    throw new Error('DATABASE_URL is not set')
+}
+
 const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
+    connectionString: databaseUrl,
 })
 
 const prisma = new PrismaClient({adapter})
@@ -79,7 +84,7 @@ const hasPrismaCode = (error: unknown, code: string) =>
 const epley1RM = (weight: number, reps: number) => weight * (1 + reps / 30)
 
 // Finds an exercise owned by suigned in user
-const findOwnedExercise = async (exerciseId: string, userId: string) => 
+const findOwnedExercise = (exerciseId: string, userId: string) => 
     prisma.exercise.findFirst({
         where: { id: exerciseId, userId }
     })
@@ -323,5 +328,5 @@ app.get('/epley', async (req, res) => {
 })
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`)
+    console.log(`Server running at http://localhost:${String(port)}`)
 })

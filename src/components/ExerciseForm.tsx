@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import styles from '../App.module.css'
 
 interface ExerciseFormProps {
@@ -9,7 +9,7 @@ interface ExerciseFormProps {
 export function ExerciseForm({ disabled, onSubmit }: ExerciseFormProps) {
   const [name, setName] = useState('')
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
     const trimmedName = name.trim()
     if (!trimmedName) return
@@ -18,13 +18,13 @@ export function ExerciseForm({ disabled, onSubmit }: ExerciseFormProps) {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={event => { void handleSubmit(event) }}>
       <label className={styles.field}>
         <span className={styles.label}>Exercise name</span>
         <input
           className={styles.input}
           value={name}
-          onChange={event => setName(event.target.value)}
+          onChange={event => { setName(event.target.value) }}
           placeholder="e.g. Bench Press"
           maxLength={60}
           required
