@@ -98,7 +98,7 @@ function AuthenticatedApp() {
                 exercises={exercises}
                 loading={loading}
                 onAdd={addExercise}
-                onDelete={deleteExercise}
+                onDelete={event => { void deleteExercise(event) }}
               />
             }
           />
@@ -112,7 +112,7 @@ function AuthenticatedApp() {
                 loading={loading}
                 onExerciseChange={setSelectedExerciseId}
                 onAdd={addSet}
-                onDelete={deleteSet}
+                onDelete={event => { void deleteSet(event) }}
               />
             }
           />
