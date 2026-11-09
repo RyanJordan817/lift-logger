@@ -15,34 +15,45 @@ export function useLiftLogger() {
   const { getToken, isLoaded, isSignedIn } = useAuth()
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [sets, setSets] = useState<LoggedSet[]>([])
-  const [oneRepMaxHistory, setOneRepMaxHistory] = useState<OneRepMaxEstimate[]>([])
+  const [oneRepMaxHistory, setOneRepMaxHistory] = useState<OneRepMaxEstimate[]>(
+    []
+  )
   const [selectedExerciseId, setSelectedExerciseId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const apiFetch = useCallback(async (path: string, init: RequestInit = {}) => {
-    const token = await getToken()
-    const headers = new Headers(init.headers)
-    if (token) headers.set('Authorization', `Bearer ${token}`)
+  const apiFetch = useCallback(
+    async (path: string, init: RequestInit = {}) => {
+      const token = await getToken()
+      const headers = new Headers(init.headers)
+      if (token) headers.set('Authorization', `Bearer ${token}`)
 
-    return fetch(`${API_BASE}${path}`, { ...init, headers })
-  }, [getToken])
+      return fetch(`${API_BASE}${path}`, { ...init, headers })
+    },
+    [getToken]
+  )
 
-  const request = useCallback(async <T,>(path: string, init?: RequestInit): Promise<T> => {
-    const response = await apiFetch(path, init)
-    const data: unknown = await response.json().catch(() => null)
+  const request = useCallback(
+    async <T>(path: string, init?: RequestInit): Promise<T> => {
+      const response = await apiFetch(path, init)
+      const data: unknown = await response.json().catch(() => null)
 
-    if (!response.ok) {
-      const message =
-        typeof data === 'object' && data !== null && 'error' in data && typeof data.error === 'string'
-          ? data.error
-          : `Request failed with status ${String(response.status)}`
-      throw new Error(message)
-    }
+      if (!response.ok) {
+        const message =
+          typeof data === 'object' &&
+          data !== null &&
+          'error' in data &&
+          typeof data.error === 'string'
+            ? data.error
+            : `Request failed with status ${String(response.status)}`
+        throw new Error(message)
+      }
 
-    return data as T
-  }, [apiFetch])
+      return data as T
+    },
+    [apiFetch]
+  )
 
   const refreshOneRepMaxHistory = useCallback(async () => {
     const history = await request<OneRepMaxEstimate[]>('/epley')
@@ -65,14 +76,18 @@ export function useLiftLogger() {
         setExercises(exerciseData)
         setSets(setData)
         setOneRepMaxHistory(history)
-        setSelectedExerciseId(current =>
-          exerciseData.some(exercise => exercise.id === current)
+        setSelectedExerciseId((current) =>
+          exerciseData.some((exercise) => exercise.id === current)
             ? current
-            : exerciseData[0]?.id ?? ''
+            : (exerciseData[0]?.id ?? '')
         )
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError instanceof Error ? loadError.message : 'Failed to load your training data')
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : 'Failed to load your training data'
+          )
         }
       }
     }
@@ -93,12 +108,16 @@ export function useLiftLogger() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim().toLowerCase() }),
       })
-      setExercises(current => [exercise, ...current])
+      setExercises((current) => [exercise, ...current])
       setSelectedExerciseId(exercise.id)
       setSuccess(`Added ${name.trim()} successfully.`)
       return true
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Failed to create exercise')
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : 'Failed to create exercise'
+      )
       return false
     } finally {
       setLoading(false)
@@ -109,15 +128,28 @@ export function useLiftLogger() {
     setError('')
     setSuccess('')
     try {
-      await request<{ success: boolean }>(`/exercises/${encodeURIComponent(exerciseId)}`, {
-        method: 'DELETE',
-      })
-      setExercises(current => current.filter(exercise => exercise.id !== exerciseId))
-      setSets(current => current.filter(set => set.exerciseId !== exerciseId))
-      setSelectedExerciseId(current => current === exerciseId ? '' : current)
+      await request<{ success: boolean }>(
+        `/exercises/${encodeURIComponent(exerciseId)}`,
+        {
+          method: 'DELETE',
+        }
+      )
+      setExercises((current) =>
+        current.filter((exercise) => exercise.id !== exerciseId)
+      )
+      setSets((current) =>
+        current.filter((set) => set.exerciseId !== exerciseId)
+      )
+      setSelectedExerciseId((current) =>
+        current === exerciseId ? '' : current
+      )
       setSuccess('Exercise deleted successfully.')
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Failed to delete exercise')
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : 'Failed to delete exercise'
+      )
       return
     }
 
@@ -138,10 +170,12 @@ export function useLiftLogger() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(setInput),
       })
-      setSets(current => [newSet, ...current])
+      setSets((current) => [newSet, ...current])
       setSuccess('Set logged successfully.')
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Failed to log set')
+      setError(
+        actionError instanceof Error ? actionError.message : 'Failed to log set'
+      )
       return false
     } finally {
       setLoading(false)
@@ -159,13 +193,20 @@ export function useLiftLogger() {
     setError('')
     setSuccess('')
     try {
-      await request<{ success: boolean }>(`/sets/${encodeURIComponent(setId)}`, {
-        method: 'DELETE',
-      })
-      setSets(current => current.filter(set => set.id !== setId))
+      await request<{ success: boolean }>(
+        `/sets/${encodeURIComponent(setId)}`,
+        {
+          method: 'DELETE',
+        }
+      )
+      setSets((current) => current.filter((set) => set.id !== setId))
       setSuccess('Set deleted successfully.')
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Failed to delete set')
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : 'Failed to delete set'
+      )
       return
     }
 

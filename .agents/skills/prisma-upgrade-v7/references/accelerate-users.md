@@ -34,7 +34,7 @@ import { defineConfig, env } from 'prisma/config'
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    url: env('DATABASE_URL'),  // Accelerate URL works here
+    url: env('DATABASE_URL'), // Accelerate URL works here
   },
 })
 ```
@@ -58,7 +58,7 @@ export const prisma = new PrismaClient({
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL  // This will fail with prisma://
+  connectionString: process.env.DATABASE_URL, // This will fail with prisma://
 })
 ```
 
@@ -87,7 +87,7 @@ DIRECT_DATABASE_URL="postgresql://..."  # For migrations
 // prisma.config.ts
 export default defineConfig({
   datasource: {
-    url: env('DIRECT_DATABASE_URL'),  // Direct URL for CLI
+    url: env('DIRECT_DATABASE_URL'), // Direct URL for CLI
   },
 })
 ```
@@ -103,7 +103,7 @@ import { PrismaClient } from '../generated/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 
 export const prisma = new PrismaClient({
-  accelerateUrl: process.env.DATABASE_URL,  // prisma+postgres:// URL
+  accelerateUrl: process.env.DATABASE_URL, // prisma+postgres:// URL
 }).$extends(withAccelerate())
 ```
 
@@ -117,7 +117,7 @@ import { PrismaClient } from '../generated/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL  // Direct postgres:// URL
+  connectionString: process.env.DATABASE_URL, // Direct postgres:// URL
 })
 
 export const prisma = new PrismaClient({ adapter })
@@ -130,7 +130,7 @@ The extension enables caching:
 ```typescript
 const users = await prisma.user.findMany({
   cacheStrategy: {
-    ttl: 60,  // Cache for 60 seconds
+    ttl: 60, // Cache for 60 seconds
     swr: 120, // Stale-while-revalidate for 120 seconds
   },
 })

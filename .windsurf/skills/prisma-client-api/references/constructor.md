@@ -9,7 +9,7 @@ import { PrismaClient } from '../generated/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 })
 
 const prisma = new PrismaClient({ adapter })
@@ -25,7 +25,7 @@ Driver adapter instance:
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 })
 
 const prisma = new PrismaClient({ adapter })
@@ -37,7 +37,7 @@ const prisma = new PrismaClient({ adapter })
 import { withAccelerate } from '@prisma/extension-accelerate'
 
 const prisma = new PrismaClient({
-  accelerateUrl: process.env.DATABASE_URL,  // prisma:// URL
+  accelerateUrl: process.env.DATABASE_URL, // prisma:// URL
 }).$extends(withAccelerate())
 ```
 
@@ -54,12 +54,12 @@ const prisma = new PrismaClient({
 
 #### Log levels
 
-| Level | Description |
-|-------|-------------|
-| `query` | All SQL queries |
-| `info` | Informational messages |
-| `warn` | Warnings |
-| `error` | Errors |
+| Level   | Description            |
+| ------- | ---------------------- |
+| `query` | All SQL queries        |
+| `info`  | Informational messages |
+| `warn`  | Warnings               |
+| `error` | Errors                 |
 
 #### Log to events
 
@@ -85,7 +85,7 @@ Control error formatting:
 ```typescript
 const prisma = new PrismaClient({
   adapter,
-  errorFormat: 'pretty',  // 'pretty' | 'colorless' | 'minimal'
+  errorFormat: 'pretty', // 'pretty' | 'colorless' | 'minimal'
 })
 ```
 
@@ -106,7 +106,7 @@ const prisma = new PrismaClient({
 })
 
 await withQueryTags({ route: '/api/users', requestId: 'req-123' }, () =>
-  prisma.user.findMany(),
+  prisma.user.findMany()
 )
 ```
 
@@ -120,8 +120,8 @@ Default transaction settings:
 const prisma = new PrismaClient({
   adapter,
   transactionOptions: {
-    maxWait: 5000,      // Max wait to acquire transaction (ms)
-    timeout: 10000,     // Max transaction duration (ms)
+    maxWait: 5000, // Max wait to acquire transaction (ms)
+    timeout: 10000, // Max transaction duration (ms)
     isolationLevel: 'Serializable',
   },
 })
@@ -155,7 +155,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL!
+    connectionString: process.env.DATABASE_URL!,
   })
   return new PrismaClient({ adapter })
 }
@@ -174,9 +174,10 @@ if (process.env.NODE_ENV !== 'production') {
 import { PrismaClient } from '@/generated/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
-const createAdapter = () => new PrismaPg({
-  connectionString: process.env.DATABASE_URL!
-})
+const createAdapter = () =>
+  new PrismaPg({
+    connectionString: process.env.DATABASE_URL!,
+  })
 
 const prismaClientSingleton = () => {
   return new PrismaClient({ adapter: createAdapter() })

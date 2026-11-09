@@ -54,7 +54,7 @@ import { Prisma } from '../generated/client'
 
 const conditions = [
   Prisma.sql`role = ${'ADMIN'}`,
-  Prisma.sql`verified = ${true}`
+  Prisma.sql`verified = ${true}`,
 ]
 
 const users = await prisma.$queryRaw`

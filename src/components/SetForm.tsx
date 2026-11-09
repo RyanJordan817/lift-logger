@@ -7,7 +7,12 @@ interface SetFormProps {
   selectedExerciseId: string
   disabled: boolean
   onExerciseChange: (exerciseId: string) => void
-  onSubmit: (set: { exerciseId: string; weight: number; reps: number; rpe: number }) => Promise<boolean>
+  onSubmit: (set: {
+    exerciseId: string
+    weight: number
+    reps: number
+    rpe: number
+  }) => Promise<boolean>
 }
 
 export function SetForm({
@@ -39,18 +44,27 @@ export function SetForm({
   }
 
   return (
-    <form className={styles.form} onSubmit={event => { void handleSubmit(event) }}>
+    <form
+      className={styles.form}
+      onSubmit={(event) => {
+        void handleSubmit(event)
+      }}
+    >
       <label className={styles.field}>
         <span className={styles.label}>Exercise</span>
         <select
           className={styles.input}
           value={selectedExerciseId}
-          onChange={event => { onExerciseChange(event.target.value) }}
+          onChange={(event) => {
+            onExerciseChange(event.target.value)
+          }}
           required
         >
           <option value="">Select an exercise</option>
-          {exercises.map(exercise => (
-            <option key={exercise.id} value={exercise.id}>{exercise.name}</option>
+          {exercises.map((exercise) => (
+            <option key={exercise.id} value={exercise.id}>
+              {exercise.name}
+            </option>
           ))}
         </select>
       </label>
@@ -63,7 +77,9 @@ export function SetForm({
           max="2000"
           step="any"
           value={weight}
-          onChange={event => { setWeight(event.target.value) }}
+          onChange={(event) => {
+            setWeight(event.target.value)
+          }}
           required
         />
       </label>
@@ -76,7 +92,9 @@ export function SetForm({
           max="100"
           step="1"
           value={reps}
-          onChange={event => { setReps(event.target.value) }}
+          onChange={(event) => {
+            setReps(event.target.value)
+          }}
           required
         />
       </label>
@@ -89,7 +107,9 @@ export function SetForm({
           max="10"
           step="1"
           value={rpe}
-          onChange={event => { setRpe(event.target.value) }}
+          onChange={(event) => {
+            setRpe(event.target.value)
+          }}
           required
         />
       </label>

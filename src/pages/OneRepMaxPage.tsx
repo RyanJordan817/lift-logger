@@ -13,7 +13,9 @@ export function OneRepMaxPage({ exercises, estimates }: OneRepMaxPageProps) {
       <header className={styles.pageHeader}>
         <p className={styles.eyebrow}>YOUR TRAINING SPACE</p>
         <h1 className={styles.pageTitle}>1RM history</h1>
-        <p className={styles.description}>Track your estimated one-rep max over time.</p>
+        <p className={styles.description}>
+          Track your estimated one-rep max over time.
+        </p>
       </header>
       <OneRepMaxList exercises={exercises} estimates={estimates} />
     </section>

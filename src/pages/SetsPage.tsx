@@ -9,7 +9,12 @@ interface SetsPageProps {
   selectedExerciseId: string
   loading: boolean
   onExerciseChange: (exerciseId: string) => void
-  onAdd: (set: { exerciseId: string; weight: number; reps: number; rpe: number }) => Promise<boolean>
+  onAdd: (set: {
+    exerciseId: string
+    weight: number
+    reps: number
+    rpe: number
+  }) => Promise<boolean>
   onDelete: (setId: string) => void
 }
 
@@ -27,7 +32,9 @@ export function SetsPage({
       <header className={styles.pageHeader}>
         <p className={styles.eyebrow}>YOUR TRAINING SPACE</p>
         <h1 className={styles.pageTitle}>Sets</h1>
-        <p className={styles.description}>Log your workouts and review recent training sets.</p>
+        <p className={styles.description}>
+          Log your workouts and review recent training sets.
+        </p>
       </header>
       {exercises.length === 0 ? (
         <p className={styles.notice}>Add an exercise before logging a set.</p>

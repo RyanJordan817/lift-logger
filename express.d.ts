@@ -1,9 +1,9 @@
 export {}
 
 declare global {
-    namespace Express {
-        interface Locals {
-            userId: string
-        }
+  namespace Express {
+    interface Locals {
+      userId: string
     }
+  }
 }

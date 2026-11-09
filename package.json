@@ -9,9 +9,10 @@
     "server": "tsx server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "lint": "eslint .",
-    "format:check": "prettier --check",
+    "format:check": "prettier --check src server *.ts *.js",
+    "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@clerk/express": "^2.1.86",
@@ -47,7 +48,8 @@
     "tsx": "^4.23.12",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "vitest": "^5.1.0"
   },
   "engines": {
     "node": "24.x"

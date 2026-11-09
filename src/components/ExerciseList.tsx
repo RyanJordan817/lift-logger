@@ -9,7 +9,11 @@ interface ExerciseListProps {
 
 export function ExerciseList({ exercises, onDelete }: ExerciseListProps) {
   const handleDelete = (exercise: Exercise) => {
-    if (window.confirm(`Delete ${exercise.name}? Its logged sets will also be deleted.`)) {
+    if (
+      window.confirm(
+        `Delete ${exercise.name}? Its logged sets will also be deleted.`
+      )
+    ) {
       onDelete(exercise.id)
     }
   }
@@ -20,10 +24,12 @@ export function ExerciseList({ exercises, onDelete }: ExerciseListProps) {
         Your exercises <span className={styles.count}>{exercises.length}</span>
       </h2>
       {exercises.length === 0 ? (
-        <p className={styles.emptyState}>No exercises yet. Add one above to get started.</p>
+        <p className={styles.emptyState}>
+          No exercises yet. Add one above to get started.
+        </p>
       ) : (
         <ul className={styles.itemList}>
-          {exercises.map(exercise => (
+          {exercises.map((exercise) => (
             <li className={styles.listItem} key={exercise.id}>
               <span className={styles.itemTitle}>{exercise.name}</span>
               <time className={styles.itemMeta} dateTime={exercise.createdAt}>
@@ -33,7 +39,9 @@ export function ExerciseList({ exercises, onDelete }: ExerciseListProps) {
                 className={styles.deleteButton}
                 type="button"
                 aria-label={`Delete ${exercise.name}`}
-                onClick={() => { handleDelete(exercise) }}
+                onClick={() => {
+                  handleDelete(exercise)
+                }}
               >
                 <Trash2 aria-hidden="true" size={18} />
               </button>

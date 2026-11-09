@@ -10,13 +10,20 @@ interface ExercisesPageProps {
   onDelete: (exerciseId: string) => void
 }
 
-export function ExercisesPage({ exercises, loading, onAdd, onDelete }: ExercisesPageProps) {
+export function ExercisesPage({
+  exercises,
+  loading,
+  onAdd,
+  onDelete,
+}: ExercisesPageProps) {
   return (
     <section className={styles.page}>
       <header className={styles.pageHeader}>
         <p className={styles.eyebrow}>YOUR TRAINING SPACE</p>
         <h1 className={styles.pageTitle}>Exercises</h1>
-        <p className={styles.description}>Manage the exercises you use to track your training.</p>
+        <p className={styles.description}>
+          Manage the exercises you use to track your training.
+        </p>
       </header>
       <ExerciseForm disabled={loading} onSubmit={onAdd} />
       <ExerciseList exercises={exercises} onDelete={onDelete} />

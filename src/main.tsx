@@ -9,7 +9,7 @@ import '@mdi/font/css/materialdesignicons.min.css'
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 if (!publishableKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY. Add to your .env file.")
+  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY. Add to your .env file.')
 }
 
 const rootElement = document.getElementById('root')
@@ -24,5 +24,5 @@ createRoot(rootElement).render(
         <App />
       </BrowserRouter>
     </ClerkProvider>
-  </StrictMode>,
+  </StrictMode>
 )

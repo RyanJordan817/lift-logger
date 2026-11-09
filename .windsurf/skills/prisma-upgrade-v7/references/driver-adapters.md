@@ -14,18 +14,18 @@ MongoDB should not follow this path. There is no published MongoDB `@prisma/adap
 
 ## Available Adapters
 
-| Database | Adapter Package | Underlying Driver |
-|----------|-----------------|-------------------|
-| PostgreSQL | `@prisma/adapter-pg` | `pg` |
-| MySQL / MariaDB | `@prisma/adapter-mariadb` | `mariadb` |
-| SQLite | `@prisma/adapter-better-sqlite3` | `better-sqlite3` |
-| Prisma Postgres (Node.js) | `@prisma/adapter-pg` | `pg` |
-| Prisma Postgres (edge/serverless) | `@prisma/adapter-ppg` | `@prisma/ppg` |
-| SQL Server | `@prisma/adapter-mssql` | `mssql` |
-| Neon | `@prisma/adapter-neon` | `@neondatabase/serverless` |
-| PlanetScale | `@prisma/adapter-planetscale` | `@planetscale/database` |
-| Turso/libSQL | `@prisma/adapter-libsql` | `@libsql/client` |
-| D1 (Cloudflare) | `@prisma/adapter-d1` | Cloudflare D1 |
+| Database                          | Adapter Package                  | Underlying Driver          |
+| --------------------------------- | -------------------------------- | -------------------------- |
+| PostgreSQL                        | `@prisma/adapter-pg`             | `pg`                       |
+| MySQL / MariaDB                   | `@prisma/adapter-mariadb`        | `mariadb`                  |
+| SQLite                            | `@prisma/adapter-better-sqlite3` | `better-sqlite3`           |
+| Prisma Postgres (Node.js)         | `@prisma/adapter-pg`             | `pg`                       |
+| Prisma Postgres (edge/serverless) | `@prisma/adapter-ppg`            | `@prisma/ppg`              |
+| SQL Server                        | `@prisma/adapter-mssql`          | `mssql`                    |
+| Neon                              | `@prisma/adapter-neon`           | `@neondatabase/serverless` |
+| PlanetScale                       | `@prisma/adapter-planetscale`    | `@planetscale/database`    |
+| Turso/libSQL                      | `@prisma/adapter-libsql`         | `@libsql/client`           |
+| D1 (Cloudflare)                   | `@prisma/adapter-d1`             | Cloudflare D1              |
 
 ## Installation
 
@@ -68,7 +68,7 @@ import { PrismaClient } from '../generated/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 })
 
 const prisma = new PrismaClient({ adapter })
@@ -99,7 +99,7 @@ import { PrismaClient } from '../generated/client'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 
 const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || 'file:./dev.db'
+  url: process.env.DATABASE_URL || 'file:./dev.db',
 })
 
 const prisma = new PrismaClient({ adapter })
@@ -112,7 +112,7 @@ import { PrismaClient } from '../generated/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 
 const adapter = new PrismaNeon({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 })
 
 const prisma = new PrismaClient({ adapter })
@@ -177,8 +177,8 @@ import { PrismaPg } from '@prisma/adapter-pg'
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
   // Pool configuration
-  max: 10,                    // Maximum connections
-  idleTimeoutMillis: 30000,   // Close idle connections after 30s
+  max: 10, // Maximum connections
+  idleTimeoutMillis: 30000, // Close idle connections after 30s
   connectionTimeoutMillis: 5000, // Connection timeout (v6 default was 5s)
 })
 ```
@@ -188,7 +188,7 @@ const adapter = new PrismaPg({
 ```typescript
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
-  connectionTimeoutMillis: 5000,  // v6 used 5 second timeout
+  connectionTimeoutMillis: 5000, // v6 used 5 second timeout
 })
 ```
 
@@ -200,8 +200,8 @@ const adapter = new PrismaPg({
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false  // Accept self-signed certs
-  }
+    rejectUnauthorized: false, // Accept self-signed certs
+  },
 })
 ```
 
@@ -212,8 +212,8 @@ const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     ca: fs.readFileSync('/path/to/ca-cert.pem'),
-    rejectUnauthorized: true
-  }
+    rejectUnauthorized: true,
+  },
 })
 ```
 
@@ -226,8 +226,8 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient({
   datasources: {
-    db: { url: process.env.DATABASE_URL }
-  }
+    db: { url: process.env.DATABASE_URL },
+  },
 })
 ```
 
@@ -238,7 +238,7 @@ import { PrismaClient } from '../generated/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
 })
 
 const prisma = new PrismaClient({ adapter })
@@ -256,7 +256,7 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!
+  connectionString: process.env.DATABASE_URL!,
 })
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })

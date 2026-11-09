@@ -2,9 +2,9 @@ name: CI Quality Gate
 
 on:
   push:
-    branches: [ "**" ]
+    branches: ['**']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
   validate:
@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses:  actions/setup-node@v4
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
@@ -30,7 +30,7 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
-      
+
       - name: Run Typecheck
         run: npm run typecheck
 

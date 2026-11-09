@@ -21,7 +21,7 @@ npm install @prisma/compute-sdk @prisma/management-api-sdk
 Config helper:
 
 ```typescript
-import { defineComputeConfig } from "@prisma/compute-sdk/config";
+import { defineComputeConfig } from '@prisma/compute-sdk/config'
 ```
 
 Use this import in `prisma.compute.ts` for type checking. The helper is an identity function; the CLI loader aliases the import when it evaluates config files, so a user project does not need the SDK solely to load a Compute config.
@@ -29,7 +29,7 @@ Use this import in `prisma.compute.ts` for type checking. The helper is an ident
 Create an authenticated Management API client:
 
 ```typescript
-import { createManagementApiClient } from "@prisma/management-api-sdk"
+import { createManagementApiClient } from '@prisma/management-api-sdk'
 
 const apiClient = createManagementApiClient({
   token: process.env.PRISMA_API_TOKEN,
@@ -41,19 +41,19 @@ Token naming differs by surface. `@prisma/cli app ...` uses `PRISMA_SERVICE_TOKE
 Deploy a prebuilt artifact:
 
 ```typescript
-import { ComputeClient, PreBuilt } from "@prisma/compute-sdk"
+import { ComputeClient, PreBuilt } from '@prisma/compute-sdk'
 
 const compute = new ComputeClient(apiClient)
 const databaseUrl = process.env.DATABASE_URL
-if (!databaseUrl) throw new Error("DATABASE_URL is required")
+if (!databaseUrl) throw new Error('DATABASE_URL is required')
 
 const result = await compute.deploy({
   strategy: new PreBuilt({
-    appPath: "./dist",
-    entrypoint: "index.js",
+    appPath: './dist',
+    entrypoint: 'index.js',
   }),
-  projectId: "proj_abc",
-  appName: "my-app",
+  projectId: 'proj_abc',
+  appName: 'my-app',
   // region: "us-east-1", // optional: explicit placement for a new app
   envVars: { DATABASE_URL: databaseUrl },
   portMapping: { http: 3000 },
