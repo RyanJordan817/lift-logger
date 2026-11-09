@@ -118,7 +118,10 @@ app.post('/exercises', async (req, res) =>{
 
     try {
         const exercise = await prisma.exercise.create({
-            data: { name: parsed.data.name, userId: res.locals.userId },
+            data: { 
+                name: parsed.data.name, 
+                userId: res.locals.userId
+            },
         })
         res.status(200).json(exercise)
     } catch (error) {
@@ -148,7 +151,10 @@ app.get('/exercises', async (req, res) => {
 app.delete('/exercises/:id', async (req, res) => {
     try {
         const result = await prisma.exercise.deleteMany({ 
-            where: { id: req.params.id, userId: res.locals.userId }, 
+            where: { 
+                id: req.params.id, 
+                userId: res.locals.userId
+            }, 
         })
         if (result.count === 0) {
             return res.status(404).json({ error: 'Exercise not found' })
